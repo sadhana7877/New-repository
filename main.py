@@ -53,3 +53,25 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 def get_user_by_name(name: str, db: Session = Depends(get_db)):
     users = db.query(User).filter(User.name == name).all()
     return users
+
+# 🆕 UPDATE: edit user by ID
+@app.put("/users/{user_id}")
+def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db_user.name = user.name
+    db_user.email = user.email
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+# 🆕 DELETE: remove user by ID
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(db_user)
+    db.commit()
+    return {"message": "User deleted successfully"}
